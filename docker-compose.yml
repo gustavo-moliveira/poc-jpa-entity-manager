@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/testdb
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+
+  jmeter:
+    image: justb4/jmeter:latest
+    volumes:
+      - ./jmeter/test_plan.jmx:/test_plan.jmx
+    depends_on:
+      - app
+    entrypoint: ["jmeter", "-n", "-t", "/test_plan.jmx", "-l", "/results/results.jtl"]
+    ports:
+      - "60000:60000"
+    working_dir: /jmeter
